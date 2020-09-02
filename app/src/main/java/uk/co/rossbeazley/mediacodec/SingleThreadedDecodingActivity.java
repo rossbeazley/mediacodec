@@ -195,8 +195,10 @@ public class SingleThreadedDecodingActivity extends Activity implements SurfaceH
 				SingleThreadedDecodingActivity.this.finish();
 		}
 
-		private void log(String message) {
-			Log.d("DecodeActivity", message);
-		}
+
+	}
+
+	private static void log(String message) {
+		Log.d("DecodeActivity", message);
 	}
 }
