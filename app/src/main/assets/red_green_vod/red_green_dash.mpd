@@ -66,46 +66,6 @@
         codecs="avc3.42C015"
         scanType="progressive">
       </Representation>
-      <Representation
-        id="video=156000"
-        bandwidth="156000"
-        width="256"
-        height="144"
-        codecs="avc3.42C015"
-        scanType="progressive">
-      </Representation>
-      <Representation
-        id="video=281000"
-        bandwidth="281000"
-        width="384"
-        height="216"
-        codecs="avc3.42C015"
-        scanType="progressive">
-      </Representation>
-      <Representation
-        id="video=437000"
-        bandwidth="437000"
-        width="512"
-        height="288"
-        codecs="avc3.4D401E"
-        scanType="progressive">
-      </Representation>
-      <Representation
-        id="video=827000"
-        bandwidth="827000"
-        width="704"
-        height="396"
-        codecs="avc3.4D401E"
-        scanType="progressive">
-      </Representation>
-      <Representation
-        id="video=1604000"
-        bandwidth="1604000"
-        width="960"
-        height="540"
-        codecs="avc3.4D401F"
-        scanType="progressive">
-      </Representation>
     </AdaptationSet>
   </Period>
 </MPD>
