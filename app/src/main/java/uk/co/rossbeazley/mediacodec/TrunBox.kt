@@ -1,6 +1,6 @@
 package uk.co.rossbeazley.mediacodec
 
-class TrunBox(val sampleCount: Int, boxBytes: ByteArray) : Box("trun", boxBytes)
+class TrunBox(val sampleCount: Int, boxBytes: ByteArray, val dataOffset: Int) : Box("trun", boxBytes)
 {
     /*     class FullBox(unsigned int(32) boxtype, unsigned int(8) v, bit(24) f)     extends Box(boxtype)
            {
@@ -36,7 +36,8 @@ class TrunBox(val sampleCount: Int, boxBytes: ByteArray) : Box("trun", boxBytes)
             //currently ignoring full box header hence 8 (4 from box)
             val boxBytes = bytes.sliceArray(8 until bytes.size)
             val sampleCount = readBitsAsLong(32,boxBytes)
-            return TrunBox(sampleCount.toInt(), boxBytes)
+            val dataOffset = readBitsAsLong(32,boxBytes,4)
+            return TrunBox(sampleCount.toInt(), boxBytes, dataOffset.toInt())
         }
     }
 }

@@ -66,13 +66,13 @@ fun boxSize(bytes: ByteArray, byteOffset: Int): Long {
     return readBitsAsLong(32, bytes)
 }
 
-fun readBitsAsLong(number: Int, bytes: ByteArray) : Long {
+fun readBitsAsLong(number: Int, bytes: ByteArray, byteOffset: Int = 0) : Long {
     var startBits = number
     var idx = 0
     var result = 0L
     while ( startBits > 0) {
         startBits -= 8
-        result = result.or((0xffL and (bytes[idx].toLong())).shl(startBits))
+        result = result.or((0xffL and (bytes[byteOffset + idx].toLong())).shl(startBits))
         idx++
     }
     return result

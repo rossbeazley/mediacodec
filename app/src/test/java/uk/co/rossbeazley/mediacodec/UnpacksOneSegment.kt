@@ -223,5 +223,6 @@ class UnpacksOneSegment {
         assertThat(box.name, `is`("trun"))
         assertThat(box.payload.size, `is`(396))
         assertThat(box.sampleCount, `is`(96))
+        assertThat(box.dataOffset, `is`(496))
     }
 }
