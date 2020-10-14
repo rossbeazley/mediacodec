@@ -46,6 +46,7 @@ fun parseBox(bytes: ByteArray): Box {
         "traf" -> TrafBox.from(bytes)
         "tfhd" -> TfhdBox.from(bytes)
         "tfdt" -> TfdtBox.from(bytes)
+        "trun" -> TrunBox.from(bytes)
         else -> Box(boxName, bytes.sliceArray(4 until bytes.size))
     }
 }

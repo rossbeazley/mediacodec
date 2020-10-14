@@ -210,4 +210,18 @@ class UnpacksOneSegment {
     }
 
 
+    @Test
+    fun trafHasATrun()
+    {
+        /**
+         * [trun] size=12+396, flags=205
+             sample count = 96
+             data offset = 496
+             first sample flags = 2400040
+         */
+        val box : TrunBox = extracter.boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
+        assertThat(box.name, `is`("trun"))
+        assertThat(box.payload.size, `is`(396))
+        assertThat(box.sampleCount, `is`(96))
+    }
 }
