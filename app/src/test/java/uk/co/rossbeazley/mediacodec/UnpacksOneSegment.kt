@@ -214,7 +214,7 @@ class UnpacksOneSegment {
     fun trafHasATrun()
     {
         /**
-         * [trun] size=12+396, flags=205
+         * [trun] size=12+396, flags=205 (data‐offset‐present, first‐sample‐flags‐present, sample‐size‐present)
              sample count = 96
              data offset = 496
              first sample flags = 2400040
@@ -224,5 +224,11 @@ class UnpacksOneSegment {
         assertThat(box.payload.size, `is`(396))
         assertThat(box.sampleCount, `is`(96))
         assertThat(box.dataOffset, `is`(496))
+        assertThat(box.sampleRecords.size, `is`(96))
+        assertThat(box.firstSampleFlags, `is`(0x2400040))
+        assertThat(box.sampleRecords[0].sampleSize, `is`(208))
+        assertThat(box.sampleRecords[10].sampleSize, `is`(12))
+        assertThat(box.sampleRecords[66].sampleSize, `is`(145))
+        assertThat(box.sampleRecords[95].sampleSize, `is`(19))
     }
 }

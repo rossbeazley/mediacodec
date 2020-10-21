@@ -66,6 +66,10 @@ fun boxSize(bytes: ByteArray, byteOffset: Int): Long {
     return readBitsAsLong(32, bytes)
 }
 
+fun readBytesAsLong(numberOfBytes: Int, bytes: ByteArray, byteOffset: Int = 0) : Long {
+    return readBitsAsLong(numberOfBytes*8, bytes, byteOffset)
+}
+
 fun readBitsAsLong(number: Int, bytes: ByteArray, byteOffset: Int = 0) : Long {
     var startBits = number
     var idx = 0
