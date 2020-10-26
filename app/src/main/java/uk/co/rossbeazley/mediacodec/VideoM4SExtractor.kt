@@ -2,6 +2,7 @@ package uk.co.rossbeazley.mediacodec
 
 class VideoM4SExtractor(val bytes: ByteArray) {
 
+
     val boxes: MutableMap<String, Box> = mutableMapOf()
 
     var frameCount: Int = 0
@@ -30,6 +31,35 @@ class VideoM4SExtractor(val bytes: ByteArray) {
         boxes.addBox(mdatBox)
     }
 
+
+    fun sample(i: Int): ByteArray {
+        //read the data offset from the trun
+        val box : TrunBox = boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
+
+        val mdat = boxes["mdat"] !! as MdatBox
+
+        val dataOffset = box.dataOffset
+        val mdatHeader = mdat.size - mdat.payload.size
+        val offsetInMdatFromStart = dataOffset - (boxes["moof"]!!.size)
+        val offsetInMdatPayload = offsetInMdatFromStart - mdatHeader
+
+        var sampleOffset = offsetInMdatPayload + (allOtherSampleSizesBefore(i))
+
+        val sample = mdat.payload.sliceArray(sampleOffset until box.sampleRecords[i].sampleSize + sampleOffset)
+        return sample
+    }
+
+    private fun allOtherSampleSizesBefore(i: Int): Int {
+        var sum = 0
+
+        if (i == 0) return sum
+
+        val box : TrunBox = boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
+        for(idx in (i-1) downTo 0) {
+            sum += box.sampleRecords[idx].sampleSize
+        }
+        return sum
+    }
 }
 
 

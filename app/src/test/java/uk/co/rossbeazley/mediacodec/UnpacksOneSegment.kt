@@ -124,12 +124,17 @@ class UnpacksOneSegment {
     @Test
     fun theFirstBoxHas480BytesOfPayload() {
         assertThat(extracter.boxes["moof"]!!.payload.size, `is`(480))
+        assertThat(extracter.boxes["moof"]!!.size, `is`(488))
     }
 
     @Test
     fun theSecondBoxIsMDATAndHas2178BytesOfPayload() {
-        assertThat(extracter.boxes["mdat"]?.name, `is`("mdat"))
-        assertThat(extracter.boxes["mdat"]?.payload?.size, `is`(2178))
+        val box : MdatBox = extracter.boxes["mdat"]!! as MdatBox
+        assertThat(box?.name, `is`("mdat"))
+        assertThat(box?.payload?.size, `is`(2178))
+        assertThat(box?.size, `is`(8+2178))
+
+
     }
 
     /////
@@ -230,5 +235,22 @@ class UnpacksOneSegment {
         assertThat(box.sampleRecords[10].sampleSize, `is`(12))
         assertThat(box.sampleRecords[66].sampleSize, `is`(145))
         assertThat(box.sampleRecords[95].sampleSize, `is`(19))
+    }
+
+    @Test
+    fun firstSample() {
+        assertThat(extracter.sample(0).size, `is`(208))
+    }
+
+    @Test
+    fun secondSample() {
+        assertThat(extracter.sample(1).size, `is`(12))
+    }
+
+    @Test
+    fun severalSamples() {
+        assertThat(extracter.sample(10).size, `is`(12))
+        assertThat(extracter.sample(66).size, `is`(145))
+        assertThat(extracter.sample(95).size, `is`(19))
     }
 }

@@ -1,6 +1,6 @@
 package uk.co.rossbeazley.mediacodec
 
-class MoofBox(boxByes: ByteArray) : Box("moof", boxByes) {
+class MoofBox(boxByes: ByteArray) : Box("moof", boxByes, boxByes.size+8) {
     companion object {
         fun from(bytes: ByteArray): MoofBox {
 
