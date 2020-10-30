@@ -47,7 +47,8 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
 
        Thread {
 
-           for(frame in 0 until 20) {
+           val frameCount = extracter.frameCount
+           for(frame in 0 until frameCount) {
                feedCodec(decoder, frame)
            }
 
@@ -71,13 +72,13 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
     private fun renderToScreen(decoder: MediaCodec, surface: Surface) {
 
         Thread() {
-            decoder.setOutputSurface(surface)
+            //decoder.setOutputSurface(surface)
             val startTime = System.nanoTime()
 
             val info = MediaCodec.BufferInfo()
 
             while (NOT_DONE) {
-                logOutput("dequeueOutputBuffer ${decoder.outputFormat}")
+                //logOutput("dequeueOutputBuffer ${decoder.outputFormat}")
                 val outIndex = decoder.dequeueOutputBuffer(info, 10000)
                 when (outIndex) {
                     MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> logOutput("INFO_OUTPUT_BUFFERS_CHANGED")
@@ -85,16 +86,17 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
                     MediaCodec.INFO_TRY_AGAIN_LATER -> logOutput("dequeueOutputBuffer timed out!")
                     else -> {
                         logOutput("Got a buffer at ${info.presentationTimeUs} and current presentation time ${System.nanoTime() - startTime}")
-                        while (info.presentationTimeUs * 1000 > System.nanoTime() - startTime) {
-                            try {
-                                Thread.sleep(10)
-                            } catch (e: InterruptedException) {
-                                e.printStackTrace()
-                                break
-                            }
-                        }
+//                        while (info.presentationTimeUs * 1000 > System.nanoTime() - startTime) {
+//                            try {
+//                                Thread.sleep(10)
+//                            } catch (e: InterruptedException) {
+//                                e.printStackTrace()
+//                                break
+//                            }
+//                        }
                         logOutput("OutputBuffer info flags " + Integer.toBinaryString(info.flags))
                         decoder.releaseOutputBuffer(outIndex, true)
+                        logOutput("RELEASED A BUFFER!")
                     }
                 }
 
@@ -122,11 +124,9 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
 
         val surface = holder.surface
         val decoder = cobbleTogetherACodec(surface)
-
-        decoder.start()
         //        bitmapDecoded(decoder)
         //thread 1
-        feedCodecWithMedia(getAssets().openFd("seg1.h264"), decoder)
+        feedCodecWithMedia(getAssets().openFd("seg1.m4s"), decoder)
         //thread 2
         renderToScreen(decoder, holder.surface)
     }
@@ -155,23 +155,23 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
     }
 
     private fun feedCodec(decoder: MediaCodec, i: Int) {
-        println("Feeding ${i}")
+        logInput("Feeding ${i}")
         val inIndex = decoder.dequeueInputBuffer(10000)
-        println("inIndex ${inIndex}")
+        logInput("inIndex ${inIndex}")
         val buffer = decoder.getInputBuffer(inIndex)!!
 
         val sample = extracter.sample(i)
         buffer.put(sample)
         val sampleSize: Int = sample.size
-        println("sample size ${sampleSize}")
+        logInput("sample size ${sampleSize}")
         //BUFFER_FLAG_KEY_FRAME | BUFFER_FLAG_CODEC_CONFIG
         val flags = when(i) {
-            0 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+            0 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG).or(MediaCodec.BUFFER_FLAG_KEY_FRAME)
             else -> 0
         }
-        buffer.position(0)
+        //buffer.position(0)
         decoder.queueInputBuffer(inIndex, i, sampleSize, i.toLong(), flags)
-        println("samqueueInputBuffer ${flags}")
+        logInput("samqueueInputBuffer ${flags}")
     }
 
 

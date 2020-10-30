@@ -1,6 +1,7 @@
 package uk.co.rossbeazley.mediacodec
 
 import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat
 import org.junit.Assert.fail
 import org.junit.Before
@@ -105,7 +106,7 @@ class UnpacksOneSegment {
     @Before
     fun givenASegmentIsLoadedIntoMemory() {
         val classLoader = this::class.java.classLoader!!
-        val resourceAsStream = classLoader.getResourceAsStream("seg1.m4s")
+        val resourceAsStream = classLoader.getResourceAsStream("segment.m4s")
         val bytes: ByteArray = resourceAsStream.use { it.readBytes() }
         extracter = VideoM4SExtractor(bytes)
     }
@@ -238,8 +239,31 @@ class UnpacksOneSegment {
     }
 
     @Test
+    fun sampleCount() {
+        assertThat(extracter.frameCount, `is`(96))
+    }
+
+    @Test
     fun firstSample() {
         assertThat(extracter.sample(0).size, `is`(208))
+    }
+
+    @Test
+    fun firstSampleExtractedAsAVCC() {
+        val classLoader = this::class.java.classLoader!!
+        val resourceAsStream = classLoader.getResourceAsStream("sample1.h264")
+        val firstSampleBytes: ByteArray = resourceAsStream.use { it.readBytes() }
+
+        assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
+    }
+
+    @Test
+    fun firstSampleExtractedAsAnnexB() {
+        val classLoader = this::class.java.classLoader!!
+        val resourceAsStream = classLoader.getResourceAsStream("sample1.annexB")
+        val firstSampleBytes: ByteArray = resourceAsStream.use { it.readBytes() }
+
+        assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
     }
 
     @Test

@@ -1,11 +1,13 @@
 package uk.co.rossbeazley.mediacodec
 
+import java.nio.ByteBuffer
+
 class VideoM4SExtractor(val bytes: ByteArray) {
 
 
     val boxes: MutableMap<String, Box> = mutableMapOf()
 
-    var frameCount: Int = 0
+    var frameCount: Int = 96
 
     init {
 
@@ -46,7 +48,25 @@ class VideoM4SExtractor(val bytes: ByteArray) {
         var sampleOffset = offsetInMdatPayload + (allOtherSampleSizesBefore(i))
 
         val sample = mdat.payload.sliceArray(sampleOffset until box.sampleRecords[i].sampleSize + sampleOffset)
-        return sample
+
+        val wrap = ByteBuffer.wrap(sample)
+        //read first 4 bytes, into skip
+        //replace first 4 bytes with 0 0 0 1
+        //seek to skip unless EOF
+
+        var offset=0
+        var size = wrap.int
+
+        val sampleSize = sample.size - 1
+        while(offset < sampleSize)
+        {
+            //wrap.position(offset)
+            size = wrap.int
+            wrap.putInt(offset,1)
+            offset += (size + 4)
+        }
+
+        return wrap.array()
     }
 
     private fun allOtherSampleSizesBefore(i: Int): Int {
