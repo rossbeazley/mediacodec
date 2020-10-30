@@ -56,13 +56,15 @@ class DIYDecodingActivity : Activity(), SurfaceHolder.Callback {
     fun bitmapDecoded(decoder : MediaCodec) {
 
 
-        for(frame in 0 until 1) {
+        for(frame in 0 until 20) {
             feedCodec(decoder, frame)
         }
 
+        val inIndex = decoder.dequeueInputBuffer(10000)
+        decoder.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
 
         val info = MediaCodec.BufferInfo()
-        var stillWaiting = 10
+        var stillWaiting = 20
         while(stillWaiting > 0) {
             val outIndex = decoder.dequeueOutputBuffer(info, 10000)
             when (outIndex) {
@@ -98,9 +100,10 @@ class DIYDecodingActivity : Activity(), SurfaceHolder.Callback {
         println("sample size ${sampleSize}")
         //BUFFER_FLAG_KEY_FRAME | BUFFER_FLAG_CODEC_CONFIG
         val flags = when(i) {
-            0 -> 0.or(BUFFER_FLAG_CODEC_CONFIG).or(BUFFER_FLAG_KEY_FRAME)
+            0 -> 0.or(BUFFER_FLAG_CODEC_CONFIG)
             else -> 0
         }
+        buffer.position(0)
         decoder.queueInputBuffer(inIndex, i, sampleSize, i.toLong(), flags)
         println("samqueueInputBuffer ${flags}")
     }
