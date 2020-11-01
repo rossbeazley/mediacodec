@@ -62,7 +62,7 @@ class ParsesInitSegment {
 
     @Test
     fun moovHasThreeBoxes() {
-        val moovBox = extracter.boxes["moov"]!!
+        val moovBox = extracter.boxes["moov"] as BoxOfBoxes
         assertThat(moovBox.boxes.size, `is`(3))
         assertThat(moovBox.boxes["mvhd"]!!.size, `is`(108))
         assertThat(moovBox.boxes["trak"]!!.size, `is`(8+459))

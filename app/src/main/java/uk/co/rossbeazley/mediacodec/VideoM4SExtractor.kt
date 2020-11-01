@@ -36,12 +36,13 @@ class VideoM4SExtractor(val bytes: ByteArray) {
 
     fun sample(i: Int): ByteArray {
         //read the data offset from the trun
-        val trun : TrunBox = boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
+        val box : BoxOfBoxes = boxes["moof"] as BoxOfBoxes
+        val trun : TrunBox = (box.boxes["traf"] as BoxOfBoxes).boxes["trun"]!! as TrunBox
         val mdat = boxes["mdat"] !! as MdatBox
 
         val dataOffset = trun.dataOffset
         val mdatHeader = mdat.size - mdat.payload.size
-        val offsetInMdatFromStart = dataOffset - (boxes["moof"]!!.size)
+        val offsetInMdatFromStart = dataOffset - (box.size)
         val offsetInMdatPayload = offsetInMdatFromStart - mdatHeader
 
         var sampleOffset = offsetInMdatPayload + (allOtherSampleSizesBefore(i))
@@ -77,12 +78,17 @@ class VideoM4SExtractor(val bytes: ByteArray) {
 
         if (i == 0) return sum
 
-        val box : TrunBox = boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
+        val traf = trafBox()
+        val box : TrunBox = traf.boxes["trun"]!! as TrunBox
         for(idx in (i-1) downTo 0) {
             sum += box.sampleRecords[idx].sampleSize
         }
         return sum
     }
+
+    fun trafBox() = moofBox().boxes["traf"] as BoxOfBoxes
+
+    fun moofBox() = (boxes["moof"] as BoxOfBoxes)
 }
 
 

@@ -143,12 +143,12 @@ class UnpacksOneSegment {
 
     @Test
     fun theMoofHasTwoBoxes() {
-        assertThat(extracter.boxes["moof"]!!.boxes.size, `is`(2))
+        assertThat(extracter.moofBox().boxes.size, `is`(2))
     }
 
     @Test
     fun moofFirstBoxIsMFHD() {
-        val box = extracter.boxes["moof"]!!.boxes["mfhd"]!!
+        val box = extracter.moofBox().boxes["mfhd"]!!
         assertThat(box.name, `is`("mfhd"))
         assertThat(box.payload.size, `is`(4))
 
@@ -165,7 +165,7 @@ class UnpacksOneSegment {
 
     @Test
     fun moofHasAtraf() {
-        val box = extracter.boxes["moof"]!!.boxes["traf"]!!
+        val box = extracter.moofBox().boxes["traf"] as BoxOfBoxes
         assertThat(box.name, `is`("traf"))
         assertThat(box.payload.size, `is`(456))
         assertThat(box.boxes.size, `is`(3))
@@ -174,7 +174,7 @@ class UnpacksOneSegment {
     @Test
     fun trafHasATFHD()
     {
-        val box = extracter.boxes["moof"]!!.boxes["traf"]!!.boxes["tfhd"]!!
+        val box = extracter.trafBox().boxes["tfhd"]!!
         assertThat(box.name, `is`("tfhd"))
         assertThat(box.payload.size, `is`(16))
         when (box) {
@@ -198,7 +198,7 @@ class UnpacksOneSegment {
     @Test
     fun trafHasATFDT()
     {
-        val box = extracter.boxes["moof"]!!.boxes["traf"]!!.boxes["tfdt"]!!
+        val box = extracter.trafBox().boxes["tfdt"]!!
         assertThat(box.name, `is`("tfdt"))
         assertThat(box.payload.size, `is`(8))
         when (box) {
@@ -226,7 +226,7 @@ class UnpacksOneSegment {
              data offset = 496
              first sample flags = 2400040
          */
-        val box : TrunBox = extracter.boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
+        val box : TrunBox = extracter.trafBox().boxes["trun"]!! as TrunBox
         assertThat(box.name, `is`("trun"))
         assertThat(box.payload.size, `is`(396))
         assertThat(box.sampleCount, `is`(96))
