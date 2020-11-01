@@ -4,11 +4,9 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
 import android.media.MediaCodec
-import android.media.MediaCodec.BUFFER_FLAG_CODEC_CONFIG
 import android.media.MediaCodec.BUFFER_FLAG_KEY_FRAME
 import android.media.MediaCodecInfo.CodecProfileLevel.AV1Level21
 import android.media.MediaCodecInfo.CodecProfileLevel.AVCProfileMain
-import android.media.MediaFormat
 import android.media.MediaFormat.*
 import android.view.Surface
 import android.view.TextureView

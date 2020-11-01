@@ -36,37 +36,40 @@ class VideoM4SExtractor(val bytes: ByteArray) {
 
     fun sample(i: Int): ByteArray {
         //read the data offset from the trun
-        val box : TrunBox = boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
-
+        val trun : TrunBox = boxes["moof"]!!.boxes["traf"]!!.boxes["trun"]!! as TrunBox
         val mdat = boxes["mdat"] !! as MdatBox
 
-        val dataOffset = box.dataOffset
+        val dataOffset = trun.dataOffset
         val mdatHeader = mdat.size - mdat.payload.size
         val offsetInMdatFromStart = dataOffset - (boxes["moof"]!!.size)
         val offsetInMdatPayload = offsetInMdatFromStart - mdatHeader
 
         var sampleOffset = offsetInMdatPayload + (allOtherSampleSizesBefore(i))
 
-        val sample = mdat.payload.sliceArray(sampleOffset until box.sampleRecords[i].sampleSize + sampleOffset)
+        val sample = mdat.payload.sliceArray(sampleOffset until trun.sampleRecords[i].sampleSize + sampleOffset)
 
+        return sample //avccToAnnexB(sample)
+    }
+
+    private fun avccToAnnexB(sample: ByteArray): ByteArray {
         val wrap = ByteBuffer.wrap(sample)
         //read first 4 bytes, into skip
         //replace first 4 bytes with 0 0 0 1
-        //seek to skip unless EOF
+        //seek to skip plus the 4 byte headerunless EOF
 
-        var offset=0
-        var size = wrap.int
+        var offset = 0
+        var size: Int
 
         val sampleSize = sample.size - 1
-        while(offset < sampleSize)
-        {
+        while (offset < sampleSize) {
             //wrap.position(offset)
             size = wrap.int
-            wrap.putInt(offset,1)
+            wrap.putInt(offset, 1)
             offset += (size + 4)
         }
 
-        return wrap.array()
+        val array = wrap.array()
+        return array
     }
 
     private fun allOtherSampleSizesBefore(i: Int): Int {
@@ -90,13 +93,14 @@ fun MutableMap<String, Box>.addBox(box : Box) {
 fun parseBox(bytes: ByteArray): Box {
     val boxName = boxName(bytes, 0)
     return when (boxName) {
-        "moof" -> MoofBox.from(bytes)
+//        "moof" -> MoofBox.from(bytes)
         "mdat" -> MdatBox.from(bytes)
         "mfhd" -> MfhdBox.from(bytes)
         "traf" -> TrafBox.from(bytes)
         "tfhd" -> TfhdBox.from(bytes)
         "tfdt" -> TfdtBox.from(bytes)
         "trun" -> TrunBox.from(bytes)
+        "moov","moof" -> BoxOfBoxes.from(bytes, boxName)
         else -> Box(boxName, bytes.sliceArray(4 until bytes.size))
     }
 }

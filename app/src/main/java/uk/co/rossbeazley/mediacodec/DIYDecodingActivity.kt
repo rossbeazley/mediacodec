@@ -3,7 +3,6 @@ package uk.co.rossbeazley.mediacodec
 import android.app.Activity
 import android.media.MediaCodec
 import android.media.MediaCodec.BUFFER_FLAG_CODEC_CONFIG
-import android.media.MediaCodec.BUFFER_FLAG_KEY_FRAME
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaCodecList.REGULAR_CODECS

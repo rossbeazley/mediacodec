@@ -5,6 +5,7 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 class UnpacksOneSegment {
@@ -257,7 +258,7 @@ class UnpacksOneSegment {
         assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
     }
 
-    @Test
+    @Test @Ignore("May not need to convert")
     fun firstSampleExtractedAsAnnexB() {
         val classLoader = this::class.java.classLoader!!
         val resourceAsStream = classLoader.getResourceAsStream("sample1.annexB")

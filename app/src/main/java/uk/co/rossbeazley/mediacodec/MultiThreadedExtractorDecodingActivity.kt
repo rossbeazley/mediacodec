@@ -3,7 +3,6 @@ package uk.co.rossbeazley.mediacodec
 import android.app.Activity
 import android.content.res.AssetFileDescriptor
 import android.media.MediaCodec
-import android.media.MediaCodecInfo
 import android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
 import android.media.MediaCodecList
 import android.media.MediaFormat
@@ -13,7 +12,6 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import java.io.IOException
 import java.nio.ByteBuffer
 
 class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callback {
