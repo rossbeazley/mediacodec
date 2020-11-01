@@ -104,6 +104,7 @@ fun parseBox(bytes: ByteArray): Box {
         "tfhd" -> TfhdBox.from(bytes)
         "tfdt" -> TfdtBox.from(bytes)
         "trun" -> TrunBox.from(bytes)
+        "stsd" -> StsdBox.from(bytes)
         "moov","moof", "traf", "trak", "mdia", "minf", "stbl" -> BoxOfBoxes.from(bytes, boxName)
         else -> Box.from(bytes, boxName)
     }

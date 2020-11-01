@@ -141,9 +141,14 @@ class ParsesInitSegment {
         val mdia = trak.boxes["mdia"] as BoxOfBoxes
         val minf = mdia.boxes["minf"] as BoxOfBoxes
         val stbl = minf.boxes["stbl"] as BoxOfBoxes
-        val box = stbl.boxes["stsd"] as /*Stsd*/Box
-        assertThat(box.size, `is`(12+125))
+        val box = stbl.boxes["stsd"] as StsdBox
+        assertThat(box.entryCount, `is`(1))
+        assertThat(box.sampleEntries.size, `is`(box.entryCount))
+        assertThat(box.sampleEntries["avc3"]!!.name, `is`("avc3"))
+        assertThat(box.sampleEntries["avc3"]!!.size, `is`(8+113))
+
     }
+
 
 
 
