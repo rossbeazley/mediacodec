@@ -96,11 +96,11 @@ fun parseBox(bytes: ByteArray): Box {
 //        "moof" -> MoofBox.from(bytes)
         "mdat" -> MdatBox.from(bytes)
         "mfhd" -> MfhdBox.from(bytes)
-        "traf" -> TrafBox.from(bytes)
+//        "traf" -> TrafBox.from(bytes)
         "tfhd" -> TfhdBox.from(bytes)
         "tfdt" -> TfdtBox.from(bytes)
         "trun" -> TrunBox.from(bytes)
-        "moov","moof" -> BoxOfBoxes.from(bytes, boxName)
+        "moov","moof", "traf" -> BoxOfBoxes.from(bytes, boxName)
         else -> Box(boxName, bytes.sliceArray(4 until bytes.size))
     }
 }
