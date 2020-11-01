@@ -258,7 +258,7 @@ class UnpacksOneSegment {
         assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
     }
 
-    @Test @Ignore("May not need to convert")
+    //@Test @Ignore("May not need to convert")
     fun firstSampleExtractedAsAnnexB() {
         val classLoader = this::class.java.classLoader!!
         val resourceAsStream = classLoader.getResourceAsStream("sample1.annexB")

@@ -67,6 +67,85 @@ class ParsesInitSegment {
         assertThat(moovBox.boxes["mvhd"]!!.size, `is`(108))
         assertThat(moovBox.boxes["trak"]!!.size, `is`(8+459))
         assertThat(moovBox.boxes["mvex"]!!.size, `is`(8+32))
-
     }
+
+
+    @Test
+    fun trakHasTwoBoxes() {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val box = moov.boxes["trak"] as BoxOfBoxes
+        assertThat(box.boxes.size, `is`(2))
+        assertThat(box.boxes["tkhd"]!!.size, `is`(12+80))
+        assertThat(box.boxes["mdia"]!!.size, `is`(8+359))
+    }
+
+    @Test
+    fun mdiaHasThreeBoxes() {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val box = trak.boxes["mdia"] as BoxOfBoxes
+        assertThat(box.boxes.size, `is`(3))
+        assertThat(box.boxes["mdhd"]!!.size, `is`(12+20))
+        assertThat(box.boxes["hdlr"]!!.size, `is`(12+38))
+        assertThat(box.boxes["minf"]!!.size, `is`(8+269))
+    }
+
+
+    @Test
+    fun minfHasThreeBoxes() {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val mdia = trak.boxes["mdia"] as BoxOfBoxes
+        val box = mdia.boxes["minf"] as BoxOfBoxes
+        assertThat(box.boxes.size, `is`(3))
+        assertThat(box.boxes["vmhd"]!!.size, `is`(12+8))
+        assertThat(box.boxes["dinf"]!!.size, `is`(8+28))
+        assertThat(box.boxes["stbl"]!!.size, `is`(8+205))
+    }
+
+
+    @Test
+    fun stblIsParsed() {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val mdia = trak.boxes["mdia"] as BoxOfBoxes
+        val minf = mdia.boxes["minf"] as BoxOfBoxes
+        val box = minf.boxes["stbl"] as BoxOfBoxes
+        assertThat(box.boxes.size, `is`(5))
+        assertThat(box.boxes["stsd"]!!.size, `is`(12+125))
+    }
+
+
+    /**
+     *
+     * [stsd] size=12+125
+            entry_count = 1
+            [avc3] size=8+113
+              data_reference_index = 1
+              width = 192
+              height = 108
+              compressor = Elemental H.264
+              [avcC] size=8+7
+                Configuration Version = 1
+                Profile = Baseline
+                Profile Compatibility = c0
+                Level = 21
+                NALU Length Size = 4
+              [btrt] size=8+12
+
+     */
+    @Test
+    fun stsd() {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val mdia = trak.boxes["mdia"] as BoxOfBoxes
+        val minf = mdia.boxes["minf"] as BoxOfBoxes
+        val stbl = minf.boxes["stbl"] as BoxOfBoxes
+        val box = stbl.boxes["stsd"] as /*Stsd*/Box
+        assertThat(box.size, `is`(12+125))
+    }
+
+
+
+
 }

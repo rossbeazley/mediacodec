@@ -99,15 +99,13 @@ fun MutableMap<String, Box>.addBox(box : Box) {
 fun parseBox(bytes: ByteArray): Box {
     val boxName = boxName(bytes, 0)
     return when (boxName) {
-//        "moof" -> MoofBox.from(bytes)
         "mdat" -> MdatBox.from(bytes)
         "mfhd" -> MfhdBox.from(bytes)
-//        "traf" -> TrafBox.from(bytes)
         "tfhd" -> TfhdBox.from(bytes)
         "tfdt" -> TfdtBox.from(bytes)
         "trun" -> TrunBox.from(bytes)
-        "moov","moof", "traf" -> BoxOfBoxes.from(bytes, boxName)
-        else -> Box(boxName, bytes.sliceArray(4 until bytes.size))
+        "moov","moof", "traf", "trak", "mdia", "minf", "stbl" -> BoxOfBoxes.from(bytes, boxName)
+        else -> Box.from(bytes, boxName)
     }
 }
 
