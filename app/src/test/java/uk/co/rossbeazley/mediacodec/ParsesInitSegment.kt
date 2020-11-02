@@ -1,6 +1,7 @@
 package uk.co.rossbeazley.mediacodec
 
 import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.endsWith
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -150,6 +151,41 @@ class ParsesInitSegment {
     }
 
 
+
+
+    /**
+     *
+    [avc3] size=8+113
+    data_reference_index = 1
+    width = 192
+    height = 108
+    compressor = Elemental H.264
+    [avcC] size=8+7
+        Configuration Version = 1
+        Profile = Baseline
+        Profile Compatibility = c0
+        Level = 21
+        NALU Length Size = 4
+    [btrt] size=8+12
+
+     */
+    @Test
+    fun avc3() {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val mdia = trak.boxes["mdia"] as BoxOfBoxes
+        val minf = mdia.boxes["minf"] as BoxOfBoxes
+        val stbl = minf.boxes["stbl"] as BoxOfBoxes
+        val stsd = stbl.boxes["stsd"] as StsdBox
+        val box = stsd.sampleEntries["avc3"] as Avc3Box
+        assertThat(box.name, `is`("avc3"))
+        assertThat(box.dataReferenceIndex, `is`(1))
+        assertThat(box.width, `is`(192))
+        assertThat(box.height, `is`(108))
+        assertThat(box.depth,`is`(24))
+        assertThat(box.compressorName,endsWith("Elemental H.264"))
+        //assertThat(box.boxes.size, `is`(2))
+    }
 
 
 

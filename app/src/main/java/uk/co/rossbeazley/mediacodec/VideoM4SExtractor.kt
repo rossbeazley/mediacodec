@@ -97,7 +97,9 @@ fun MutableMap<String, Box>.addBox(box : Box) {
 }
 
 fun parseBox(bytes: ByteArray): Box {
+    //already consumed the size bytes
     val boxName = boxName(bytes, 0)
+    //really should now consume the name bytes
     return when (boxName) {
         "mdat" -> MdatBox.from(bytes)
         "mfhd" -> MfhdBox.from(bytes)
@@ -105,19 +107,22 @@ fun parseBox(bytes: ByteArray): Box {
         "tfdt" -> TfdtBox.from(bytes)
         "trun" -> TrunBox.from(bytes)
         "stsd" -> StsdBox.from(bytes)
+        "avc3" -> Avc3Box.from(bytes)
         "moov","moof", "traf", "trak", "mdia", "minf", "stbl" -> BoxOfBoxes.from(bytes, boxName)
         else -> Box.from(bytes, boxName)
     }
 }
 
-fun boxName(bytes: ByteArray, byteOffset: Int): String {
-    val charArray = CharArray(4)
-    charArray[0] = bytes[byteOffset + 0].toChar()
-    charArray[1] = bytes[byteOffset + 1].toChar()
-    charArray[2] = bytes[byteOffset + 2].toChar()
-    charArray[3] = bytes[byteOffset + 3].toChar()
+fun boxName(bytes: ByteArray, byteOffset: Int, length: Int = 4): String {
+    val charArray = CharArray(length)
+    var nullByte : Int = length
+    (0 until length).forEach {
+        val byte = bytes[byteOffset + it]
+        if(nullByte==length && byte==0.toByte()) nullByte=it
+        charArray[it] = byte.toChar()
+    }
 
-    val name = String(charArray)
+    val name = String(charArray,0,nullByte)
     return name
 }
 
