@@ -91,8 +91,11 @@ open class Avc3Box(payload: ByteArray, val dataReferenceIndex: Int, val width: I
             //template unsigned int(16) frame_count = 1;
             byteOffset+=2
             //string[32] compressorname;
-            val compressorName = boxName(payload, byteOffset, 32)
-            byteOffset+=32
+            //first byte is the length
+            val compressorNameLength = readBytesAsLong(1,payload,byteOffset)
+            byteOffset+=1
+            val compressorName = boxName(payload, byteOffset, compressorNameLength.toInt())
+            byteOffset+=31
             //template unsigned int(16) depth = 0x0018;
             val depth = readBytesAsLong(2,payload, byteOffset)
             byteOffset+=2

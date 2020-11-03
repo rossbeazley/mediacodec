@@ -1,7 +1,6 @@
 package uk.co.rossbeazley.mediacodec
 
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.endsWith
+import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -183,7 +182,7 @@ class ParsesInitSegment {
         assertThat(box.width, `is`(192))
         assertThat(box.height, `is`(108))
         assertThat(box.depth,`is`(24))
-        assertThat(box.compressorName,endsWith("Elemental H.264"))
+        assertThat(box.compressorName,equalTo("Elemental H.264"))
         //assertThat(box.boxes.size, `is`(2))
     }
 

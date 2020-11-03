@@ -115,14 +115,11 @@ fun parseBox(bytes: ByteArray): Box {
 
 fun boxName(bytes: ByteArray, byteOffset: Int, length: Int = 4): String {
     val charArray = CharArray(length)
-    var nullByte : Int = length
     (0 until length).forEach {
         val byte = bytes[byteOffset + it]
-        if(nullByte==length && byte==0.toByte()) nullByte=it
         charArray[it] = byte.toChar()
     }
-
-    val name = String(charArray,0,nullByte)
+    val name = String(charArray)
     return name
 }
 
