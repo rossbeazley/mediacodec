@@ -31,6 +31,17 @@ class InitM4SExtractor(val bytes: ByteArray) {
         return Pair(moofBox, remainingBytes)
     }
 
+    fun avcCBox(): Box {
+        val moov = boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val mdia = trak.boxes["mdia"] as BoxOfBoxes
+        val minf = mdia.boxes["minf"] as BoxOfBoxes
+        val stbl = minf.boxes["stbl"] as BoxOfBoxes
+        val stsd = stbl.boxes["stsd"] as StsdBox
+        val box = stsd.sampleEntries["avc3"] as Avc3Box
+        return box.avcCBox()
+    }
+
 
 }
 

@@ -187,6 +187,22 @@ class ParsesInitSegment {
         assertThat(box.boxes["btrt"]!!.name, `is`("btrt"))
 
         assertThat(box.boxes["avcC"]!!.payload.size, `is`(7))
+
+    }
+
+    @Test
+    fun avcCBox()
+    {
+        val moov = extracter.boxes["moov"] as BoxOfBoxes
+        val trak = moov.boxes["trak"] as BoxOfBoxes
+        val mdia = trak.boxes["mdia"] as BoxOfBoxes
+        val minf = mdia.boxes["minf"] as BoxOfBoxes
+        val stbl = minf.boxes["stbl"] as BoxOfBoxes
+        val stsd = stbl.boxes["stsd"] as StsdBox
+        val box = stsd.sampleEntries["avc3"] as Avc3Box
+        assertThat(box.avcCBox().payload.size, `is`(7))
+        assertThat(box.avcCBox().payload[0], `is`(1))
+        assertThat(extracter.avcCBox(), `is`(box.avcCBox()))
     }
 
 

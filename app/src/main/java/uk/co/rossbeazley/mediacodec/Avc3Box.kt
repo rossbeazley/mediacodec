@@ -2,6 +2,9 @@ package uk.co.rossbeazley.mediacodec
 
 
 open class Avc3Box(payload: ByteArray, val dataReferenceIndex: Int, val width: Int, val height: Int, val compressorName: String, val depth: Int, val boxes: MutableMap<String, Box>) : Box("avc3", payload,  payload.size+8) {
+    fun avcCBox(): Box {
+        return boxes["avcC"]!!
+    }
 
     companion object {
         fun from(bytes: ByteArray) : Avc3Box
