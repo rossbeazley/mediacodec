@@ -4,7 +4,6 @@ import org.hamcrest.CoreMatchers.*
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
-
 class ParsesInitSegment {
 
 
@@ -183,9 +182,15 @@ class ParsesInitSegment {
         assertThat(box.height, `is`(108))
         assertThat(box.depth,`is`(24))
         assertThat(box.compressorName,equalTo("Elemental H.264"))
-        //assertThat(box.boxes.size, `is`(2))
+        assertThat(box.boxes.size, `is`(2))
+        assertThat(box.boxes["avcC"]!!.name, `is`("avcC"))
+        assertThat(box.boxes["btrt"]!!.name, `is`("btrt"))
+
+        assertThat(box.boxes["avcC"]!!.payload.size, `is`(7))
     }
 
 
 
+
 }
+

@@ -1,7 +1,8 @@
 package uk.co.rossbeazley.mediacodec
 
 
-open class Avc3Box(payload: ByteArray, val dataReferenceIndex: Int, val width: Int, val height: Int, val compressorName: String, val depth: Int) : Box("avc3", payload,  payload.size+8) {
+open class Avc3Box(payload: ByteArray, val dataReferenceIndex: Int, val width: Int, val height: Int, val compressorName: String, val depth: Int, val boxes: MutableMap<String, Box>) : Box("avc3", payload,  payload.size+8) {
+
     companion object {
         fun from(bytes: ByteArray) : Avc3Box
         {
@@ -94,7 +95,7 @@ open class Avc3Box(payload: ByteArray, val dataReferenceIndex: Int, val width: I
             //first byte is the length
             val compressorNameLength = readBytesAsLong(1,payload,byteOffset)
             byteOffset+=1
-            val compressorName = boxName(payload, byteOffset, compressorNameLength.toInt())
+            val compressorName = readBytesAsString(payload, byteOffset, compressorNameLength.toInt())
             byteOffset+=31
             //template unsigned int(16) depth = 0x0018;
             val depth = readBytesAsLong(2,payload, byteOffset)
@@ -110,7 +111,15 @@ open class Avc3Box(payload: ByteArray, val dataReferenceIndex: Int, val width: I
             //MPEG4ExtensionDescriptorsBox (); // optional
 
 
-            return Avc3Box(payload, dataReferenceIndex.toInt(), width.toInt(), height.toInt(), compressorName, depth.toInt())
+            val remainingBytes = payload.sliceArray(byteOffset until payload.size)
+
+            var boxes: MutableMap<String, Box> = mutableMapOf()
+
+
+            bytesIntoBoxes(remainingBytes, boxes)
+
+
+            return Avc3Box(payload, dataReferenceIndex.toInt(), width.toInt(), height.toInt(), compressorName, depth.toInt(), boxes)
         }
     }
 }

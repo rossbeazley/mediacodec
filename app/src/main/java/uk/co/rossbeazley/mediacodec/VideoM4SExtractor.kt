@@ -98,7 +98,7 @@ fun MutableMap<String, Box>.addBox(box : Box) {
 
 fun parseBox(bytes: ByteArray): Box {
     //already consumed the size bytes
-    val boxName = boxName(bytes, 0)
+    val boxName = readBytesAsString(bytes, 0)
     //really should now consume the name bytes
     return when (boxName) {
         "mdat" -> MdatBox.from(bytes)
@@ -113,7 +113,7 @@ fun parseBox(bytes: ByteArray): Box {
     }
 }
 
-fun boxName(bytes: ByteArray, byteOffset: Int, length: Int = 4): String {
+fun readBytesAsString(bytes: ByteArray, byteOffset: Int, length: Int = 4): String {
     val charArray = CharArray(length)
     (0 until length).forEach {
         val byte = bytes[byteOffset + it]
