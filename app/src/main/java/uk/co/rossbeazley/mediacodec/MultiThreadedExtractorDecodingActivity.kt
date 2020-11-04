@@ -86,14 +86,14 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
                     MediaCodec.INFO_TRY_AGAIN_LATER -> logOutput("dequeueOutputBuffer timed out!")
                     else -> {
                         logOutput("Got a buffer at ${info.presentationTimeUs} and current presentation time ${System.nanoTime() - startTime}")
-//                        while (info.presentationTimeUs * 1000 > System.nanoTime() - startTime) {
-//                            try {
-//                                Thread.sleep(10)
-//                            } catch (e: InterruptedException) {
-//                                e.printStackTrace()
-//                                break
-//                            }
-//                        }
+             //           while (info.presentationTimeUs * 1000 > System.nanoTime() - startTime) {
+                            try {
+                                Thread.sleep((1/25)*1000)
+                            } catch (e: InterruptedException) {
+                                e.printStackTrace()
+                                break
+                            }
+               //         }
                         logOutput("OutputBuffer info flags " + Integer.toBinaryString(info.flags))
                         decoder.releaseOutputBuffer(outIndex, true)
                         logOutput("RELEASED A BUFFER!")
@@ -204,7 +204,7 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 192, 108)
         format.setLong(MediaFormat.KEY_DURATION, 96000)
         format.setInteger(MediaFormat.KEY_CAPTURE_RATE, 25)
-        format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+        format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline)
         format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AV1Level21)
         format.setInteger(MediaFormat.KEY_FRAME_RATE, 25)
         format.setInteger(MediaFormat.KEY_WIDTH, 192)
