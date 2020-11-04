@@ -52,7 +52,7 @@ class VideoM4SExtractor(val bytes: ByteArray) {
         return sample //avccToAnnexB(sample)
     }
 
-    private fun avccToAnnexB(sample: ByteArray): ByteArray {
+    public fun avccToAnnexB(sample: ByteArray): ByteArray {
         val wrap = ByteBuffer.wrap(sample)
         //read first 4 bytes, into skip
         //replace first 4 bytes with 0 0 0 1
