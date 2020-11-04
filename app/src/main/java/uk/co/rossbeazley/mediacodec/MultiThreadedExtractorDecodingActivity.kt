@@ -3,6 +3,7 @@ package uk.co.rossbeazley.mediacodec
 import android.app.Activity
 import android.content.res.AssetFileDescriptor
 import android.media.MediaCodec
+import android.media.MediaCodecInfo
 import android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
 import android.media.MediaCodecList
 import android.media.MediaFormat
@@ -16,6 +17,7 @@ import java.nio.ByteBuffer
 
 class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callback {
 
+    private lateinit var initExtractor: InitM4SExtractor
     var NOT_DONE = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -150,50 +152,75 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
         val assetFileDescriptor = getAssets().openFd("seg1.m4s")
         val bytes: ByteArray = assetFileDescriptor.createInputStream().use { it.readBytes() }
         extracter = VideoM4SExtractor(bytes)
+
+        initExtractor = InitM4SExtractor(getAssets().openFd("init.mp4").createInputStream().use { it.readBytes() })
     }
 
     private fun feedCodec(decoder: MediaCodec, i: Int) {
         logInput("Feeding ${i}")
+        val sample = extracter.sample(i)
+
+        feedByteArray(decoder, sample, i)
+    }
+
+    private fun feedByteArray(decoder: MediaCodec, sample: ByteArray, i: Int) {
         val inIndex = decoder.dequeueInputBuffer(10000)
         logInput("inIndex ${inIndex}")
         val buffer = decoder.getInputBuffer(inIndex)!!
+//
+//        if(i==0) {
+//            val payload = initExtractor.avcCBox().payload
+//            buffer.put(0x0.toByte())
+//            buffer.put(0x0.toByte())
+//            buffer.put(0x0.toByte())
+//            buffer.put(0x1.toByte())
+//            buffer.put(payload)
+//
+//        }
+        val avccToAnnexB = extracter.avccToAnnexB(sample)
+        buffer.put(avccToAnnexB)
 
-        val sample = extracter.sample(i)
-        buffer.put(sample)
-        val sampleSize: Int = sample.size
+
+
+        val sampleSize: Int = buffer.position()
         logInput("sample size ${sampleSize}")
         //BUFFER_FLAG_KEY_FRAME | BUFFER_FLAG_CODEC_CONFIG
-        val flags = when(i) {
+        val flags = when (i) {
             0 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG).or(MediaCodec.BUFFER_FLAG_KEY_FRAME)
             else -> 0
         }
-        //buffer.position(0)
-        decoder.queueInputBuffer(inIndex, i, sampleSize, i.toLong(), flags)
+        buffer.position(0)
+        decoder.queueInputBuffer(inIndex, i, sampleSize, System.nanoTime(), flags)
         logInput("samqueueInputBuffer ${flags}")
     }
 
 
     private fun cobbleTogetherACodec(surface : Surface): MediaCodec {
 
-        println("cobbleTogetherACodec")
+        logInput("cobbleTogetherACodec")
 
         //val decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-        println("CREATED")
+        logInput("CREATED")
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 192, 108)
-//        format.setLong(MediaFormat.KEY_DURATION, 96000)
-//        format.setInteger(MediaFormat.KEY_CAPTURE_RATE, 25)
-//        format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
-//        format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AV1Level21)
-
+        format.setLong(MediaFormat.KEY_DURATION, 96000)
+        format.setInteger(MediaFormat.KEY_CAPTURE_RATE, 25)
+        format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
+        format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AV1Level21)
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, 25)
+        format.setInteger(MediaFormat.KEY_WIDTH, 192)
+        format.setInteger(MediaFormat.KEY_HEIGHT, 108)
+        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920)
+        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080)
+        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, COLOR_FormatYUV420Flexible)
         val decoder = MediaCodec.createByCodecName( MediaCodecList(MediaCodecList.REGULAR_CODECS).findDecoderForFormat(format) )
 
         //format.setString(KEY_CODECS_STRING,"avc3.42C015") //api 30
         //need to work out the format proper like
         decoder.configure(format, surface, null, 0)
 
-        println("CONFIGURED")
+        logInput("CONFIGURED")
         decoder.start()
-        println("STARTED")
+        logInput("STARTED")
 
         SystemClock.sleep(1000)
         return decoder
