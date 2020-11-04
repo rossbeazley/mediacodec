@@ -7,7 +7,9 @@ class VideoM4SExtractor(val bytes: ByteArray) {
 
     val boxes: MutableMap<String, Box> = mutableMapOf()
 
-    var frameCount: Int = 96
+    val frameCount: Int
+        get() = (trafBox().boxes["trun"]!! as TrunBox).sampleCount
+
 
     init {
 
