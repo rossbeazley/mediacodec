@@ -3,7 +3,6 @@ package uk.co.rossbeazley.mediacodec
 import android.app.Activity
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
-import android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
 import android.media.MediaCodecList
 import android.media.MediaFormat
 import android.os.Bundle
@@ -28,11 +27,14 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
     }
 
     fun givenASegmentIsLoadedIntoMemory() {
-        val assetFileDescriptor = getAssets().openFd("seg1.m4s")
-        val bytes: ByteArray = assetFileDescriptor.createInputStream().use { it.readBytes() }
-        extracter = VideoM4SExtractor(bytes)
+        extracter =     VideoM4SExtractor(bytesFor("newSegment/seg1.m4s"))
+        initExtractor = InitM4SExtractor(bytesFor("newSegment/init.dash"))
+    }
 
-        initExtractor = InitM4SExtractor(getAssets().openFd("init.mp4").createInputStream().use { it.readBytes() })
+    private fun bytesFor(assetFileName: String): ByteArray {
+        val assetFileDescriptor = getAssets().openFd(assetFileName)
+        val bytes: ByteArray = assetFileDescriptor.createInputStream().use { it.readBytes() }
+        return bytes
     }
 
     private fun startPlayback(toSurface: Surface) {
@@ -46,26 +48,25 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
 
     private fun cobbleTogetherACodec(surface : Surface): MediaCodec {
 
-        logInput("cobbleTogetherACodec")
+        logInput("cobbleTogetherACodec, should really parse something to work this out -_-")
 
-        //val decoder = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-        logInput("CREATED")
         val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 192, 108)
-        format.setLong(MediaFormat.KEY_DURATION, 96000)
-        format.setInteger(MediaFormat.KEY_CAPTURE_RATE, 25)
         format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileConstrainedBaseline)
         format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AV1Level21)
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, 25)
-        format.setInteger(MediaFormat.KEY_WIDTH, 192)
+        format.setFloat(MediaFormat.KEY_FRAME_RATE, 25.0f)
+        format.setInteger(MediaFormat.KEY_ROTATION, 0)
+        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 540)
         format.setInteger(MediaFormat.KEY_HEIGHT, 108)
-        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920)
-        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080)
-        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, COLOR_FormatYUV420Flexible)
-        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 16128)
-        val decoder = MediaCodec.createByCodecName( MediaCodecList(MediaCodecList.REGULAR_CODECS).findDecoderForFormat(format) )
-        //need to work out the format proper like
-        decoder.configure(format, surface, null, 0)
+        format.setInteger(MediaFormat.KEY_WIDTH, 192)
+        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 391680)
+        format.setInteger(MediaFormat.KEY_PRIORITY, 0)
+        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 960)
 
+        val decoderName = MediaCodecList(MediaCodecList.REGULAR_CODECS).findDecoderForFormat(format)
+        val decoder = MediaCodec.createByCodecName(decoderName)
+        logInput("CREATED")
+
+        decoder.configure(format, surface, null, 0)
         logInput("CONFIGURED")
         decoder.start()
         logInput("STARTED")
@@ -76,77 +77,110 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
 
 
     private fun feedCodecWithMedia(extracter: VideoM4SExtractor, decoder: MediaCodec) {
-
        Thread {
-
            val frameCount = extracter.frameCount
-           for(frame in 0 until 8) {
+           for(frame in 0 until frameCount) {
                feedCodec(extracter, decoder, frame)
            }
-
-           val inIndex = decoder.dequeueInputBuffer(10000)
-           if (inIndex >= 0) {
-               logInput("Got an input buffer to fill with EOS")
-               val buffer = decoder.getInputBuffer(inIndex)
-               //its the end of media
-               logInput("Got EOF")
-               decoder.queueInputBuffer(inIndex, 0, 0, System.nanoTime(), MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-           } else {
-               logInput("No buffers for EOS")
-           }
-
+           logInput("all done with the frames")
+           sendEOS(decoder, frameCount)
+           logInput("ENDING INPUT THREAD")
        }.start()
-
     }
 
     private fun feedCodec(extracter: VideoM4SExtractor, decoder: MediaCodec, frameIdx: Int) {
-        logInput("Feeding           ===== ${frameIdx}")
-        val sample = extracter.sample(frameIdx)
-        val inIndex = decoder.dequeueInputBuffer(10000)
-        logInput("inIndex ${inIndex}")
+        logInput("Feeding sample          ===== ${frameIdx}")
+        var nalCount = 0
+        var inIndex: Int = dequeueAnInputBufferIndexFromDecoder(decoder)
         val buffer = decoder.getInputBuffer(inIndex)!!
         buffer.clear()
-        val avccToAnnexB = extracter.avccToAnnexB(sample)
-        buffer.put(sample)
-        val sampleSize: Int = buffer.position()
-        logInput("sample size ${sampleSize}")
-        val flags = when (frameIdx) {
-            0 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG).or(MediaCodec.BUFFER_FLAG_KEY_FRAME)
-            else -> 0
+
+        val microSeconds = frameIdx * (1_000_000 / 25L)
+        var flags: Int = flagsFor(frameIdx = frameIdx, nalCount = nalCount)
+
+        extracter.naluForSample(frameIdx).forEach {
+            logInput("Feeding    nal          ===== ${nalCount}")
+            buffer.put(0x00)
+            buffer.put(0x00)
+            buffer.put(0x00)
+            buffer.put(0x01)
+            buffer.put(it)
+            nalCount+=1
         }
         buffer.flip()
-        decoder.queueInputBuffer(inIndex, frameIdx, sampleSize, System.nanoTime(), flags)
-        logInput("samqueueInputBuffer ${flags}")
+        var sampleSize = buffer.limit()
+        decoder.queueInputBuffer(inIndex, frameIdx, sampleSize, microSeconds, flags)
+        logInput("queued buffer $inIndex with nalu ${frameIdx},${nalCount}. Size was $sampleSize and presentation time was $microSeconds and flags $flags ==================")
+    }
+
+    private fun flagsFor(frameIdx: Int, nalCount: Int): Int {
+        var flags: Int = 0
+        if (frameIdx == 0) {
+            flags = when (nalCount) {
+                0 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+                1 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+                2 -> 0.or(MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
+                3 -> 0.or(MediaCodec.BUFFER_FLAG_KEY_FRAME)
+                else -> 0
+            }
+        }
+        return flags
+    }
+
+    private fun dequeueAnInputBufferIndexFromDecoder(decoder: MediaCodec): Int {
+        var inIndex: Int = MediaCodec.INFO_TRY_AGAIN_LATER
+        while (inIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+
+            inIndex = decoder.dequeueInputBuffer(10000)
+
+            if (inIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                logInput("dequeueInputBuffer timed out!")
+                SystemClock.sleep(500)
+            }
+        }
+
+        logInput("Dequeued buffer at inIndex ${inIndex}")
+        return inIndex
+    }
+
+    private fun sendEOS(decoder: MediaCodec, frameCount: Int) {
+        val inIndex = decoder.dequeueInputBuffer(10000)
+        if (inIndex >= 0) {
+            val presentationTimeUs = frameCount * (1_000_000 / 25L)
+            logInput("Got an input buffer to fill with EOS at ${presentationTimeUs}")
+            decoder.queueInputBuffer(inIndex, 0, 0, presentationTimeUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+        } else {
+            logInput("No buffers for EOS")
+        }
     }
 
     private fun renderToScreen(decoder: MediaCodec, surface: Surface) {
 
-        Thread() {
+        Thread {
             val startTime = System.nanoTime()
             val info = MediaCodec.BufferInfo()
 
             while (NOT_DONE) {
                 val outIndex = decoder.dequeueOutputBuffer(info, 10000)
                 when (outIndex) {
-                    MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> logOutput("INFO_OUTPUT_BUFFERS_CHANGED")
-                    MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> logOutput("New format " + decoder.outputFormat)
+                    MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> logOutput("New format INFO_OUTPUT_FORMAT_CHANGED " + decoder.outputFormat)
                     MediaCodec.INFO_TRY_AGAIN_LATER -> logOutput("dequeueOutputBuffer timed out!")
                     else -> {
                         logOutput("Got a buffer at ${info.presentationTimeUs} and current presentation time ${System.nanoTime() - startTime}")
              //           while (info.presentationTimeUs * 1000 > System.nanoTime() - startTime) {
-                            try {
-                                Thread.sleep((1/25)*1000)
-                            } catch (e: InterruptedException) {
-                                e.printStackTrace()
-                                break
-                            }
+                            SystemClock.sleep(1000)
                //         }
                         logOutput("OutputBuffer info flags " + Integer.toBinaryString(info.flags))
-                        decoder.releaseOutputBuffer(outIndex, true)
-                        logOutput("RELEASED A BUFFER!")
+
+                        if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM == 0) {
+                            decoder.releaseOutputBuffer(outIndex, true)
+                            logOutput("RELEASED A BUFFER!")
+                        } else {
+                            logOutput("Found an EOS so not releasing")
+                        }
+
                     }
                 }
-
 
                 // All decoded frames have been rendered, we can stop playing now
                 // All decoded frames have been rendered, we can stop playing now
@@ -154,10 +188,12 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
                     logOutput("OutputBuffer BUFFER_FLAG_END_OF_STREAM")
                     decoder.stop()
                     decoder.release()
+                    NOT_DONE = false
                 } else {
                     logOutput("carry on")
                 }
             }
+            logOutput("ENDING OUTPUT THREAD")
         }.start()
     }
 

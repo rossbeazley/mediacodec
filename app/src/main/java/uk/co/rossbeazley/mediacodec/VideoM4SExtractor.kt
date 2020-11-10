@@ -91,6 +91,35 @@ class VideoM4SExtractor(val bytes: ByteArray) {
     fun trafBox() = moofBox().boxes["traf"] as BoxOfBoxes
 
     fun moofBox() = (boxes["moof"] as BoxOfBoxes)
+
+    fun naluForSample(i: Int): List<ByteArray> {
+        val result: MutableList<ByteArray> = mutableListOf()
+
+        val sample = sample(i)
+        // iterate over the sample slicing off
+
+
+        val byteBuffer = ByteBuffer.wrap(sample)
+        //read first 4 bytes, into skip
+        //replace first 4 bytes with 0 0 0 1
+        //seek to skip plus the 4 byte headerunless EOF
+
+        var offset = 0
+        var size: Int
+
+        val sampleSize = sample.size - 1
+        while (offset < sampleSize) {
+            //wrap.position(offset)
+            size = byteBuffer.int // this consumes the 4 bytes
+            val dst = ByteArray(size)
+            byteBuffer.get(dst)
+            result+=dst
+//            offset += (size + 4)
+            offset = byteBuffer.position()
+        }
+
+        return result //27 + (4) + (76) + (6)
+    }
 }
 
 

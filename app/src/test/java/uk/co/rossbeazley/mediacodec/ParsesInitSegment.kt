@@ -201,7 +201,7 @@ class ParsesInitSegment {
         val stsd = stbl.boxes["stsd"] as StsdBox
         val box = stsd.sampleEntries["avc3"] as Avc3Box
         assertThat(box.avcCBox().payload.size, `is`(7))
-        assertThat(box.avcCBox().payload[0], `is`(1))
+        assertThat(box.avcCBox().payload[0], `is`(1.toByte()))
         assertThat(extracter.avcCBox(), `is`(box.avcCBox()))
     }
 

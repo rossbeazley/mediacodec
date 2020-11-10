@@ -7,6 +7,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import java.io.FileOutputStream
 
 class UnpacksOneSegment {
 
@@ -258,15 +259,6 @@ class UnpacksOneSegment {
         assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
     }
 
-    //@Test @Ignore("May not need to convert")
-    fun firstSampleExtractedAsAnnexB() {
-        val classLoader = this::class.java.classLoader!!
-        val resourceAsStream = classLoader.getResourceAsStream("sample1.annexB")
-        val firstSampleBytes: ByteArray = resourceAsStream.use { it.readBytes() }
-
-        assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
-    }
-
     @Test
     fun secondSample() {
         assertThat(extracter.sample(1).size, `is`(12))
@@ -277,5 +269,40 @@ class UnpacksOneSegment {
         assertThat(extracter.sample(10).size, `is`(12))
         assertThat(extracter.sample(66).size, `is`(145))
         assertThat(extracter.sample(95).size, `is`(19))
+    }
+
+    @Test
+    fun extractsNaluFromSamples() {
+        assertThat(extracter.naluForSample(0).size, `is`(4))
+        assertThat(extracter.naluForSample(0)[0].size, `is`(29))
+        assertThat(extracter.naluForSample(0)[1].size, `is`(4))
+        assertThat(extracter.naluForSample(0)[2].size, `is`(76))
+        assertThat(extracter.naluForSample(0)[3].size, `is`(83))
+    }
+
+    @Test
+    fun exportNalus()
+    {
+
+        var extracter: VideoM4SExtractor
+
+        val classLoader = this::class.java.classLoader!!
+        val resourceAsStream = classLoader.getResourceAsStream("newSegment/seg1.m4s")
+        val bytes: ByteArray = resourceAsStream.use { it.readBytes() }
+        extracter = VideoM4SExtractor(bytes)
+
+        val fileOutputStream = FileOutputStream("/Users/beazlr02/workspace/inv/MediaCodec/app/src/main/assets/exoplayer/extractor.h264")
+
+        (0 until extracter.frameCount).forEach { nal ->
+            extracter.naluForSample(nal).forEach {
+                fileOutputStream.write(0x00)
+                fileOutputStream.write(0x00)
+                fileOutputStream.write(0x00)
+                fileOutputStream.write(0x01)
+                fileOutputStream.write(it)
+            }
+        }
+
+        fileOutputStream.close()
     }
 }
