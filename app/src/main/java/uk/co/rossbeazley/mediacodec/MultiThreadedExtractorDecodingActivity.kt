@@ -27,8 +27,8 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
     }
 
     fun givenASegmentIsLoadedIntoMemory() {
-        extracter =     VideoM4SExtractor(bytesFor("newSegment/seg1.m4s"))
-        initExtractor = InitM4SExtractor(bytesFor("newSegment/init.dash"))
+        extracter =     VideoM4SExtractor(bytesFor("p087hv48/seg1.m4s"))
+        initExtractor = InitM4SExtractor(bytesFor("p087hv48/init.dash"))
     }
 
     private fun bytesFor(assetFileName: String): ByteArray {
@@ -157,19 +157,15 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
     private fun renderToScreen(decoder: MediaCodec, surface: Surface) {
 
         Thread {
-            val startTime = System.nanoTime()
             val info = MediaCodec.BufferInfo()
-
             while (NOT_DONE) {
                 val outIndex = decoder.dequeueOutputBuffer(info, 10000)
                 when (outIndex) {
                     MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> logOutput("New format INFO_OUTPUT_FORMAT_CHANGED " + decoder.outputFormat)
                     MediaCodec.INFO_TRY_AGAIN_LATER -> logOutput("dequeueOutputBuffer timed out!")
                     else -> {
-                        logOutput("Got a buffer at ${info.presentationTimeUs} and current presentation time ${System.nanoTime() - startTime}")
-             //           while (info.presentationTimeUs * 1000 > System.nanoTime() - startTime) {
-                            SystemClock.sleep(1000)
-               //         }
+                        logOutput("Got a buffer at ${info.presentationTimeUs} and current presentation time ${ info.presentationTimeUs.toFloat() / 1_000_000f }")
+                            SystemClock.sleep(40)
                         logOutput("OutputBuffer info flags " + Integer.toBinaryString(info.flags))
 
                         if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM == 0) {
@@ -178,11 +174,9 @@ class MultiThreadedExtractorDecodingActivity : Activity(), SurfaceHolder.Callbac
                         } else {
                             logOutput("Found an EOS so not releasing")
                         }
-
                     }
                 }
 
-                // All decoded frames have been rendered, we can stop playing now
                 // All decoded frames have been rendered, we can stop playing now
                 if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
                     logOutput("OutputBuffer BUFFER_FLAG_END_OF_STREAM")
