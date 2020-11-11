@@ -38,7 +38,7 @@ class ParsesInitSegment {
     @Before
     fun givenASegmentIsLoadedIntoMemory() {
         val classLoader = this::class.java.classLoader!!
-        val resourceAsStream = classLoader.getResourceAsStream("init.dash")
+        val resourceAsStream = classLoader.getResourceAsStream("redGreen/init.dash")
         val bytes: ByteArray = resourceAsStream.use { it.readBytes() }
         extracter = InitM4SExtractor(bytes)
     }

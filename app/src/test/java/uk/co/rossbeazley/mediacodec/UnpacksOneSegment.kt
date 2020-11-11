@@ -108,7 +108,7 @@ class UnpacksOneSegment {
     @Before
     fun givenASegmentIsLoadedIntoMemory() {
         val classLoader = this::class.java.classLoader!!
-        val resourceAsStream = classLoader.getResourceAsStream("segment.m4s")
+        val resourceAsStream = classLoader.getResourceAsStream("redGreen/segment.m4s")
         val bytes: ByteArray = resourceAsStream.use { it.readBytes() }
         extracter = VideoM4SExtractor(bytes)
     }
@@ -253,7 +253,7 @@ class UnpacksOneSegment {
     @Test
     fun firstSampleExtractedAsAVCC() {
         val classLoader = this::class.java.classLoader!!
-        val resourceAsStream = classLoader.getResourceAsStream("sample1.h264")
+        val resourceAsStream = classLoader.getResourceAsStream("redGreen/sample1.h264")
         val firstSampleBytes: ByteArray = resourceAsStream.use { it.readBytes() }
 
         assertThat(extracter.sample(0), `is`(equalTo(firstSampleBytes)))
@@ -280,18 +280,18 @@ class UnpacksOneSegment {
         assertThat(extracter.naluForSample(0)[3].size, `is`(83))
     }
 
-    @Test
+    @Test @Ignore
     fun exportNalus()
     {
 
         var extracter: VideoM4SExtractor
 
         val classLoader = this::class.java.classLoader!!
-        val resourceAsStream = classLoader.getResourceAsStream("newSegment/seg1.m4s")
+        val resourceAsStream = classLoader.getResourceAsStream("p087hv48/seg1.m4s")
         val bytes: ByteArray = resourceAsStream.use { it.readBytes() }
         extracter = VideoM4SExtractor(bytes)
 
-        val fileOutputStream = FileOutputStream("/Users/beazlr02/workspace/inv/MediaCodec/app/src/main/assets/exoplayer/extractor.h264")
+        val fileOutputStream = FileOutputStream("./extractor.h264")
 
         (0 until extracter.frameCount).forEach { nal ->
             extracter.naluForSample(nal).forEach {
