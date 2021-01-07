@@ -54,7 +54,8 @@ class ExtractorDecodingActivity : Activity(), SurfaceHolder.Callback {
         logMain("Start Playback")
         val decoder = codecFactory.cobbleTogetherACodec(toSurface)
         //thread 1
-        feedsCodec.feedCodecWithMedia(extracter, decoder)
+        //feedsCodec.feedCodecWithMedia(extracter, decoder)
+        feedsCodec.feedCodecFromAssets(assets,decoder)
         //thread 2
         screenRenderer.renderToScreen(decoder)
     }

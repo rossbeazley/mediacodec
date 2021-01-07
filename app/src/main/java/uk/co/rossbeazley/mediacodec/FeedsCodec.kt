@@ -1,10 +1,36 @@
 package uk.co.rossbeazley.mediacodec
 
+import android.content.res.AssetManager
 import android.media.MediaCodec
 import android.os.SystemClock
 
 class FeedsCodec
 {
+    fun feedCodecFromAssets(assets: AssetManager, decoder: MediaCodec) {
+        Thread {
+            (1..10).forEach {
+
+                var extracter = VideoM4SExtractor(bytesFor("p087hv48/seg$it.m4s", assets) )
+                val frameCount = extracter.frameCount
+                for(frame in 0 until frameCount) {
+                    feedCodec(extracter, decoder, frame, it)
+                    SystemClock.sleep(40)
+                }
+            }
+
+            logInput("all done with the frames")
+            sendEOS(decoder, 960)
+            logInput("ENDING INPUT THREAD")
+        }.start()
+
+    }
+
+    private fun bytesFor(assetFileName: String, assets: AssetManager): ByteArray {
+        val assetFileDescriptor = assets.openFd(assetFileName)
+        val bytes: ByteArray = assetFileDescriptor.createInputStream().use { it.readBytes() }
+        return bytes
+    }
+
     fun feedCodecWithMedia(extracter: VideoM4SExtractor, decoder: MediaCodec) {
         Thread {
             val frameCount = extracter.frameCount
@@ -18,14 +44,14 @@ class FeedsCodec
         }.start()
     }
 
-    private fun feedCodec(extracter: VideoM4SExtractor, decoder: MediaCodec, frameIdx: Int) {
+    private fun feedCodec(extracter: VideoM4SExtractor, decoder: MediaCodec, frameIdx: Int, frameOffset: Int=1) {
         logInput("Feeding sample          ===== ${frameIdx}")
         var nalCount = 0
         var inIndex: Int = dequeueAnInputBufferIndexFromDecoder(decoder)
         val buffer = decoder.getInputBuffer(inIndex)!!
         buffer.clear()
 
-        val microSeconds = frameIdx * (1_000_000 / 25L)
+        val microSeconds = (frameIdx+ (frameOffset-1)) * (1_000_000 / 25L)
 
         extracter.naluForSample(frameIdx).forEach {
             logInput("Feeding    nal          ===== ${nalCount}")
@@ -38,7 +64,7 @@ class FeedsCodec
 
         var flags : Int = flagsFor(frameIdx = frameIdx)
         var sampleSize = buffer.limit()
-        decoder.queueInputBuffer(inIndex, frameIdx, sampleSize, microSeconds, flags)
+        decoder.queueInputBuffer(inIndex, 0, sampleSize, microSeconds, flags)
         logInput("queued buffer $inIndex with nalu ${frameIdx},${nalCount}. Size was $sampleSize and presentation time was $microSeconds and flags $flags ==================")
     }
 
