@@ -1,6 +1,7 @@
 package uk.co.rossbeazley.mediacodec
 
 import android.media.MediaCodec
+import android.os.Build
 import android.os.SystemClock
 
 class ScreenRenderer {
@@ -22,7 +23,7 @@ class ScreenRenderer {
                         logOutput("OutputBuffer info flags " + Integer.toBinaryString(info.flags))
 
                         if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM == 0) {
-                            decoder.releaseOutputBuffer(outIndex, true)
+                            decoder_releaseOutputBuffer(decoder, outIndex)
                             logOutput("RELEASED A BUFFER! ${++bufferReleaseCount}")
                         } else {
                             logOutput("OutputBuffer BUFFER_FLAG_END_OF_STREAM")
@@ -35,6 +36,14 @@ class ScreenRenderer {
             }
             logOutput("ENDING OUTPUT THREAD")
         }.start()
+    }
+
+    private fun decoder_releaseOutputBuffer(decoder: MediaCodec, outIndex: Int) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            decoder.releaseOutputBuffer(outIndex, System.nanoTime())
+        } else {
+            decoder.releaseOutputBuffer(outIndex, true)
+        }
     }
 
     private fun doNothing() {
