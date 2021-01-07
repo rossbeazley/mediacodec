@@ -32,7 +32,7 @@ class ExportSamplesToDisk {
         fileOutputStream.close()
     }
 
-    @Test @Ignore
+    @Test //@Ignore
     fun exportSamples()
     {
         var extracter: VideoM4SExtractor
